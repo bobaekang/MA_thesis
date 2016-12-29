@@ -1,0 +1,15 @@
+name: "Bobae's MA Thesis"
+output_dir: "."
+navbar:
+  title: "Bobae's MA Thesis"
+  left:
+    - text: "Proposal"
+      href: index.html
+    - text: "References"
+      href: references.html
+    - text: "Other resources"
+      href: other.html
+      
+output:
+  html_document:
+    theme: readable

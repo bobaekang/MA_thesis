@@ -1,0 +1,28 @@
+---
+title: "Evaluating Bike Share as A Solution to the “Last Mile Problem” in Public Transit"
+author: "Bobae Kang"
+date: 2016-12-29
+output: html_document
+---
+## References
+* City of Chicago. (2007). Street and Site Plan Design Standards. Retrieved from https://www.cityofchicago.org/dam/city/depts/cdot/StreetandSitePlanDesignStandards407.pdf
+
+* City of Chicago. (2014). Survey of Divvy Members Brings Positive Reviews of Chicago’s Newest Transit Service. Retrieved from https://www.cityofchicago.org/city/en/depts/mayor/press_room/press_releases/2014/mar/survey-of-divvy-members-brings-positive-reviews-of-chicagos-newe.html
+
+* DeMaio, P. (2009). Bike-Sharing: History, Impacts, Models of Provision, and Future. Journal of Public Transportation, 12(4), 41-56.
+
+* Faghih-Imani, A., & Eluru, N. (2015). Analysing bicycle-sharing system user destination choice preferences: Chicago’s Divvy system. Journal of Transport Geography, 44, 53-64.
+
+* Fishman, E. (2016). Bikeshare: A Review of Recent Literature. Transport Reviews, 36(1). DOI:10.1080/01441647.2015.1033036
+
+* Fishman, E., Washington, S., & Haworth, N. (2013). Bike Share: A Synthesis of the Literature. Transport Reviews: A Transnational Transdisciplinary Journal. DOI:10.1080/01441647.2013.775612
+
+* Griffin, G. P., & Sener, I. N. (2016). Planning for Bike Share Connectivity to Rail Transit. Journal of Public Transportation, 19(2), 1-22.
+
+* LDA Consulting. (2015). 2014 Capital Bikeshare Member Survey Report. Retrieved from http://www.capitalbikeshare.com/assets/pdf/cabi-2014surveyreport.pdf.
+
+* Ma, T., Liu, C., & Erdoğan, S. (2015). Bicycle Sharing and Transit: Does Capital Bikeshare Affect Metrorail Ridership in Washington, D.C.? Transportation Research Record: Journal of the Transportation Research Board, 2534, 1-9. DOI: 10.3141/2534-01
+
+* Martin, E. W., & Shaheen, S. A. (2014). Evaluating public transit modal shift dynamics in response to bikesharing: a tale of two U.S. cities. Journal of Transport Geography, 41, 315–324.
+
+* Zellner, M., Massey, D., Shiftan, Y., Levine, J., & Arquero, M. J. (2016). Overcoming the Last-Mile Problem with Transportation and Land-Use Improvements: An Agent-Based Approach. International Journal of Transportation, 4(1), 1-26.

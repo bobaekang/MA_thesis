@@ -1,0 +1,20 @@
+---
+title: "Evaluating Bike Share as A Solution to the “Last Mile Problem” in Public Transit"
+author: "Bobae Kang"
+date: 2016-12-29
+output: html_document
+---
+Thanks to Divvy's open data policy, there exist many wonderful works by others using Divvy data to provide insights. The following presents my selection of particularly interesting works.
+
+* A
+  
+About A
+  
+* B
+  
+About B
+  
+* C
+
+About C
+  
