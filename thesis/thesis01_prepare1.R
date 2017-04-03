@@ -1,25 +1,23 @@
-##---------------------------------------------------------------##
-## Bobae's MA Thesis (github.com/bobaekang/MA_thesis)            ##
-## Researcher: Bobae Kang (github.com/bobaekang)                 ##
-## Advisor: Benjamin Soltoff (github.com/bensoltoff)             ##
-##---------------------------------------------------------------##
-## Script: thesis01_prepare.R                                    ##
-## Last updated: 3/24/17                                         ##
-##---------------------------------------------------------------##
-## This script performs the following tasks:                     ##
-## 1. reading and transforming the CTA data to generate a data   ##
-## that contains information on both time and location for CTA   ##
-## stops.                                                        ##
-## 2. reading and transforming the Divvy data to generate 1)     ##
-## a tidy Divvy trip data with spatial and proximity variables   ## 
-## and 2) a tidy Divvy station data with proximity variables.    ##
-## 3. creating a data that links the Divvy stations to close-by  ## 
-## CTA stops.                                                    ##
-## 4. Save outputs                                               ##
-##---------------------------------------------------------------##
-## This script requires the outputs from the following scripts:  ##
-## * thesis00_download.R                                         ##
-##---------------------------------------------------------------##
+##------------------------------------------------------------------------------
+## Bobae's MA Thesis (github.com/bobaekang/MA_thesis)
+## Researcher: Bobae Kang (github.com/bobaekang)
+## Advisor: Benjamin Soltoff (github.com/bensoltoff)
+##------------------------------------------------------------------------------
+## Script: thesis01_prepare.R
+## Last updated: 4/3/17
+##------------------------------------------------------------------------------
+## This script performs the following tasks:
+## 1. reading and transforming the CTA data to generate a data that contains
+## information on both time and location for CTA stops.
+## 2. reading and transforming the Divvy data to generate 1) a tidy Divvy trip
+## data with spatial and proximity variables and 2) a tidy Divvy station data
+## with proximity variables. 
+## 3. creating a data that links the Divvy stations to close-by CTA stops.
+## 4. Save outputs
+##------------------------------------------------------------------------------
+## This script requires the outputs from the following scripts: 
+## * thesis00_download.R
+##------------------------------------------------------------------------------
 
 # Load packages
 library(tidyverse)
@@ -28,10 +26,10 @@ library(feather)
 library(geosphere)
 library(stringr)
 
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 ## 1, READ AND TRANSFORM THE CTA DATA
 ## The following codes reads two CTA dataset concerning public transit stops and combine them
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 # load and join the data
 cta_stops <- fread("rawdata/stops.txt")
 cta_stop_times <- fread("rawdata/stop_times.txt")
@@ -41,13 +39,13 @@ cta_stop_times_loc <- left_join(cta_stop_times, cta_stops, by = "stop_id")
 cta_stop_times_loc <- cta_stop_times_loc %>%
   select(-stop_sequence, -stop_headsign, -shape_dist_traveled, -stop_code, -stop_desc, -wheelchair_boarding)
 
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 ## 2. READ AND TRANSFORM THE DIVVY DATA
 ## The following codes read and join two Divvy dataset on
 ## 1) Divvy trips and 2) locations of Divvy stations.
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 
-## 2.0. Import and prepare the data-----------------------------------------------------------------##
+## 2.0. Import and prepare the data---------------------------------------------
 # Create a vector of the names of Divvy trip files
 divvy_trip_files <- list.files("rawdata/", pattern = ".*Trips.*\\.csv$", full.names = TRUE)
 
@@ -61,11 +59,11 @@ divvy_station <- fread("rawdata/Divvy_Stations_2016_Q4.csv") # only the latest/m
 colnames(divvy_station) <- c("id", "name", "lat", "lon", "dpcapacity", "online_date")
 
 
-## 2.1. Add proximity variables---------------------------------------------------------------------##
+## 2.1. Add proximity variables-------------------------------------------------
 # create matrices of Divvy and CTA coordinates
 divvy_m <- cbind(divvy_station$lon, divvy_station$lat)
 cta_m   <- cbind(cta_stops$stop_lon, cta_stops$stop_lat)
-#distance_m <- distm(Divvy_m, CTA_m, fun = distHaversine) # use this line for normal distance
+#distance_m <- distm(Divvy_m, CTA_m, fun = distHaversine) # use this line for Euclidean distance
 
 # write a function to calculate Manhattan distance
 distManhattan <- function(loc1, loc2){ 
@@ -134,7 +132,8 @@ colnames(to_station) <- c("to_station_id", "to_lon", "to_lat",
 divvy_data_from <- left_join(divvy_trip, from_station)
 divvy_data      <- left_join(divvy_data_from, to_station)
 
-## 2.2 Add time-related variables-------------------------------------------------------------------##
+
+## 2.2 Add time-related variables-----------------------------------------------
 # make starttime and stoptime variables POSITXlt data
 divvy_data$starttime <- as.POSIXlt(as.character(divvy_data$starttime), format = "%m/%d/%Y %H:%M", tz = "America/Chicago")
 divvy_data$stoptime  <- as.POSIXlt(divvy_data$stoptime, format = "%m/%d/%Y %H:%M", tz = "America/Chicago")
@@ -146,14 +145,16 @@ divvy_data <- divvy_data %>%
          stopdate  = as.Date(stoptime),
          stophour  = format(stoptime, format = "%H:%M"))
 
-# Add variables for rush hour (6:00 to 10:00 and 16:00 to 20:00)
-divvy_data$startrush <- ifelse((divvy_data$starttime$hour>=6 & divvy_data$starttime$hour<10) |
-                                 (divvy_data$starttime$hour>=16 & divvy_data$starttime$hour<20), 1, 0)
-divvy_data$stoprush  <- ifelse((divvy_data$stoptime$hour>=6 & divvy_data$stoptime$hour<10) | 
-                                 (divvy_data$stoptime$hour>=16 & divvy_data$stoptime$hour<20), 1, 0)
-
 # Add a variable for weekdays/weekends 
 divvy_data$weekday <- ifelse((divvy_data$starttime$wday != 0 & divvy_data$starttime$wday != 6), 1, 0)
+
+# Add variables for rush hour (6:00 to 10:00 and 16:00 to 20:00 for weekdays)
+divvy_data$startrush <- ifelse(((divvy_data$starttime$hour>=6 & divvy_data$starttime$hour<10) |
+                                 (divvy_data$starttime$hour>=16 & divvy_data$starttime$hour<20)) &
+                                 (divvy_data$weekday == 1), 1, 0)
+divvy_data$stoprush  <- ifelse(((divvy_data$stoptime$hour>=6 & divvy_data$stoptime$hour<10) | 
+                                 (divvy_data$stoptime$hour>=16 & divvy_data$stoptime$hour<20)) &
+                                 (divvy_data$weekday == 1), 1, 0)
 
 # Add a variable for tripduration >= 30min
 divvy_data$longtrip <- ifelse(divvy_data$tripduration >= 1800, 1, 0)
@@ -174,12 +175,11 @@ weather$PRCP <- ifelse((weather$PRCP != 0), 1, 0) # binarize precipitation, wher
 
 divvy_data <- left_join(divvy_data, weather, by=c('startdate' = 'DATE'))
 
-
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 ## 3. CREATE A DATA FRAME LINKING DIVVY STATIONS AND CLOSE CTA STOPS
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 
-# 3.1. Get index for each proximity standard -------------------------------------------------------##
+# 3.1. Get index for each proximity standard -----------------------------------
 # for 50-meter proximity standard
 index50            <- as.data.table(which(distance50 == TRUE, arr.ind = T)) # matrix of indices where the distance is <= 50
 index50            <- index50[order(index50$row, index50$col),]
@@ -204,7 +204,7 @@ divvy_station$divvy_ix <- sequence(nrow(divvy_station))
 cta_stops$cta_ix <- sequence(nrow(cta_stops))
 cta_ix <- cta_stops %>% select(stop_id, stop_name, cta_ix)
 
-# 3.2. Join divvy_station data with the proximity indices------------------------------------------##
+# 3.2. Join divvy_station data with the proximity indices-----------------------
 # <50m
 divvy_station50 <- divvy_station %>%
   left_join(index50) %>%
@@ -230,9 +230,9 @@ divvy_station300 <- divvy_station %>%
   select(id, name, prox300, prox300_n, stop_id, stop_name) # select only the columns necessary
 
 
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 ## 4. SAVE OUTPUTS
-##--------------------------------------------------------------------------------------------------##
+##------------------------------------------------------------------------------
 
 # Oututs from  Part 1
 write_feather(cta_stop_times_loc, "data/CTA_stop_times_location.feather")
@@ -248,5 +248,5 @@ write_feather(divvy_station200, "data/stops_within_200m.feather")
 write_feather(divvy_station300, "data/stops_within_300m.feather")
 
 
-# Clear the environment------------------------------------------------------------------------------#
+# Clear the environment---------------------------------------------------------
 rm(list=ls()) # clear the environment
