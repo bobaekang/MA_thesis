@@ -4,7 +4,7 @@
 ## Advisor: Benjamin Soltoff (github.com/bensoltoff)             
 ##------------------------------------------------------------------------------
 ## Script: thesis03_plots.R                                      
-## Last updated: 3/24/17                                         
+## Last updated: 4/3/17                                         
 ##------------------------------------------------------------------------------
 ## This script generates the following plots:                    
 ## * Number of Divvy trips per day                               
@@ -15,6 +15,7 @@
 ## * Trip duration per day (by day of week)
 ## * Trip duration per day (by time of day)
 ## * Max and min temperature per day
+## * Divvy stations and CTA stops
 ## * Divvy stations, trips origination
 ## * Divvy stations, trips terminating
 ##------------------------------------------------------------------------------
@@ -25,10 +26,22 @@
 # import pacakges
 library(tidyverse)
 library(ggmap)
+library(rgdal)
+library(feather)
 
 # import data
 divvy_data <- read_feather("data/Divvy_data.feather") 
 
+# chicago map
+chicago_map <- ggmap(
+  get_googlemap(
+    center = c(lon = -87.65, lat = 41.855),
+    zoom = 11))
+
+# boundaries for community areas
+boundaries <- readOGR(".", "geo_export_74c6a0ef-5c5b-47fd-9a65-2dde472fd99f")
+boundaries <- spTransform(boundaries, CRS("+proj=longlat +datum=WGS84"))
+boundaries <- fortify(boundaries)
 
 ##------------------------------------------------------------------------------
 ## * NUMBER OF DIVVY TRIPS PER DAY                               
@@ -273,38 +286,16 @@ ggsave('images/temperature_per_day.png')
 ## * DIVVY STATIONS AND CTA STOPS                             
 ##------------------------------------------------------------------------------
 
-# chicago map
-chicago_map <- ggmap(
-  get_googlemap(
-    center = c(lon = -87.68, lat = 41.91),
-    zoom = 11))
-
-chicago_map +
-  geom_point(data = divvy_station,
-             aes(x = lon, y = lat),
-             alpha = .5,
-             size = 2,
-             color = "blue") +
-  geom_point(data = cta_stops,
-             aes(x = stop_lon, y = stop_lat),
-             alpha = .1,
-             size = 1,
-             color = "red") +
-  ggtitle("Locations of Divvy Stations and CTA Stops") +
-  xlab("Longitude") +
-  ylab("Latitude")
-
-
-##------------------------------------------------------------------------------
-## * DIVVY STATIONS AND CTA STOPS                             
-##------------------------------------------------------------------------------
-
 divvy_station$proximity <- ifelse(divvy_station$prox300 == 0, '>300m',
                                   ifelse((divvy_station$prox300 == 1 & divvy_station$prox200 == 0), "200-300m",
                                          ifelse((divvy_station$prox200 == 1 & divvy_station$prox100 == 0), "100-200m",
                                                 ifelse((divvy_station$prox100 == 1 & divvy_station$prox50 == 0), "50-100m", "<50m"))))
 
 chicago_map +
+  geom_polygon(aes(x=long, y=lat, group=group),
+               fill='grey',
+               color='black',
+               data=boundaries, alpha=0) +
   geom_point(data = divvy_station,
              aes(x = lon, y = lat, color = proximity),
              size = 2) +
@@ -323,6 +314,10 @@ ggsave('images/divvy_stations_by_proximity.png')
 ## * DIVVY STATIONS, TRIPS ORIGINATING                             
 ##------------------------------------------------------------------------------
 chicago_map +
+  geom_polygon(aes(x=long, y=lat, group=group),
+               fill='grey',
+               color='black',
+               data=boundaries, alpha=0) +
   geom_point(data = divvy_data %>%
                select(from_station_name, from_lat, from_lon) %>%
                group_by(from_station_name) %>%
@@ -343,22 +338,28 @@ ggsave('images/divvy_stations_trips_originating.png')
 ##------------------------------------------------------------------------------
 ## * DIVVY STATIONS, TRIPS TERMINATING                             
 ##------------------------------------------------------------------------------
+# counts
 chicago_map +
+  geom_polygon(aes(x=long, y=lat, group=group),
+               fill='grey',
+               color='black',
+               data=boundaries, alpha=0) +
   geom_point(data = divvy_data  %>%
-               select(to_station_name, to_lat, to_lon) %>%
-               group_by(to_station_name) %>%
-               mutate(trip = n()) %>%
-               filter(!duplicated(to_station_name)),
-             aes(x = to_lon, y = to_lat, size = trip),
-             alpha = .5,
-             color = "#00BFC4") +
-    ggtitle("Divvy Stations, Trips Terminating") +
-    labs(size = "Trips terminating") + 
-    xlab("Longitude") +
-    ylab("Latitude")
+             select(to_station_name, to_lat, to_lon) %>%
+             group_by(to_station_name) %>%
+             mutate(trip = n()) %>%
+             filter(!duplicated(to_station_name)),
+           aes(x = to_lon, y = to_lat, size = trip),
+           alpha = .5,
+           color = "#00BFC4") +
+  ggtitle("Divvy Stations, Trips Terminating") +
+  labs(size = "Trips terminating") + 
+  xlab("Longitude") +
+  ylab("Latitude")
 
 # save plot
 ggsave('images/divvy_stations_trips_terminating.png')
+
 
 # Clear the environment---------------------------------------------------------
 # rm(list=ls()) # clear the environment
